@@ -17,4 +17,24 @@ const followSchema = new Schema({
     toObject: { virtuals: true },
 });
 followSchema.index({ followerId: 1, followingId: 1 }, { unique: true });
+followSchema.pre(["find", "findOne", "findOneAndUpdate", "countDocuments"], function () {
+    const filter = this.getFilter();
+    if (filter.all === true) {
+        delete filter.all;
+        this.setQuery(filter);
+        return;
+    }
+    if (filter.requested === true) {
+        delete filter.requested;
+        this.setQuery({
+            ...filter,
+            followStatus: FollowStatusEnum.REQUESTED,
+        });
+        return;
+    }
+    this.setQuery({
+        ...filter,
+        followStatus: FollowStatusEnum.ACCEPTED,
+    });
+});
 export const Follow = model("Follow", followSchema);

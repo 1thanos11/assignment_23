@@ -316,14 +316,16 @@ class ChatService {
         const [profile, chat] = await Promise.all([
             this.profileRepository.findOne({ filter: { ownerId: user._id } }),
             this.chatRepository.findOne({
-                filter: { _id: chatId, participants: user._id, type: ChatTypeEnum.OVM },
+                filter: {
+                    _id: chatId,
+                    participants: { $in: [user._id] },
+                    type: ChatTypeEnum.OVM,
+                },
             }),
         ]);
-        if (!chat)
-            throw new NotFoundError("Group chat not found");
-        const isParticipant = chat.participants.some((p) => p.toString() === user._id.toString());
-        if (!isParticipant)
-            throw new ForbiddenError("You are not in this group");
+        if (!chat) {
+            throw new NotFoundError("Group chat not found or you are not participant in this group");
+        }
         const message = await this.messageRepository.createOne({
             data: {
                 chatId: chat._id,
@@ -332,9 +334,10 @@ class ChatService {
                 type: MessageTypeEnum.TEXT,
             },
         });
-        if (!message)
+        if (!message) {
             throw new InternalServerError("Fail to send message");
-        chat.lastMessage = message.content;
+        }
+        chat.lastMessage = content;
         await Promise.all([
             chat.save(),
             this.redis.incrementMessagesVersion(chat._id),

@@ -37,7 +37,7 @@ export const GQLValidate = async ({ schema, args, }) => {
             }),
         }));
     }
-    return true;
+    return validationResult.data;
 };
 export const socketValidate = async ({ schema, args, }) => {
     const validationResult = schema.safeParse(args);

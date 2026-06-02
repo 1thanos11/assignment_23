@@ -26,7 +26,13 @@ export class DataBaseRepository {
                 updatePipeline: true,
             });
         }
-        return await this.model.findOneAndUpdate(filter, { ...update, $inc: { __v: 1 } }, {
+        return await this.model.findOneAndUpdate(filter, {
+            ...update,
+            $inc: {
+                ...(update.$inc ?? {}),
+                __v: 1,
+            },
+        }, {
             ...options,
             returnDocument: "after",
             runValidators: true,
@@ -74,6 +80,9 @@ export class DataBaseRepository {
                 hasPreviousPage: page > 1,
             },
         };
+    }
+    async aggregate({ pipeline = [], options, }) {
+        return this.model.aggregate(pipeline, options);
     }
     async updateOne({ filter, update, options, }) {
         if (Array.isArray(update)) {

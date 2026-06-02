@@ -93,6 +93,18 @@ class RedisService {
     messageKey({ chatId, cursor, limit, version, }) {
         return `Chat::Messages::${chatId}::${cursor ?? "latest"}::${limit}::v${version}`;
     }
+    followersVersionKey(userId) {
+        return `Followers::User::${userId}::version`;
+    }
+    followersKey({ userId, page = PaginateDefault.PAGE, limit = PaginateDefault.LIMIT, search = PaginateDefault.SEARCH, version, }) {
+        return `Followers::User::${userId}::${page}::${limit}::${search}::v${version}`;
+    }
+    followingsVersionKey(userId) {
+        return `Followings::User::${userId}::version`;
+    }
+    followingsKey({ userId, page = PaginateDefault.PAGE, limit = PaginateDefault.LIMIT, search = PaginateDefault.SEARCH, version, }) {
+        return `Followings::User::${userId}::${page}::${limit}::${search}::v${version}`;
+    }
     async set({ key, value, options, }) {
         try {
             return await this.client.set(key, JSON.stringify(value), options);
@@ -331,6 +343,16 @@ class RedisService {
         });
         return previous ? Number(previous) : 1;
     }
+    async getFollowersVersion(userId) {
+        const key = this.followersVersionKey(userId);
+        const previous = this.client.set(key, "1", { condition: "NX", GET: true });
+        return previous ? Number(previous) : 1;
+    }
+    async getFollowingsVersion(userId) {
+        const key = this.followingsVersionKey(userId);
+        const previous = this.client.set(key, "1", { condition: "NX", GET: true });
+        return previous ? Number(previous) : 1;
+    }
     async incrementUserVersion(id) {
         const key = this.userVersionKey(id);
         return await this.incr(key);
@@ -346,6 +368,17 @@ class RedisService {
     async incrementMessagesVersion(chatId) {
         const key = this.messageVersionKey(chatId);
         return await this.incr(key);
+    }
+    async incrementFollowersVersion(userId) {
+        const key = this.followersVersionKey(userId);
+        return await this.incr(key);
+    }
+    async incrementFollowingVersion(userId) {
+        const key = this.followingsVersionKey(userId);
+        return await this.incr(key);
+    }
+    async getSockets(userId) {
+        return await this.sMembers(this.socketKey(userId));
     }
 }
 export const redisService = new RedisService();

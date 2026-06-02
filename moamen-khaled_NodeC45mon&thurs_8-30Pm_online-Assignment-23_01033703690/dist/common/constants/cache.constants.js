@@ -8,5 +8,7 @@ export const CacheTTL = {
     COMMENT: 60,
     COMMENTS_LIST: 60,
     MESSAGES: 60,
+    FOLLOWERS_LIST: 60 * 10,
+    FOLLOWINGS_LIST: 60 * 10,
 };
 export const MAX_COUNTS = { GROUP_PARTICIPANTS: 1000 };

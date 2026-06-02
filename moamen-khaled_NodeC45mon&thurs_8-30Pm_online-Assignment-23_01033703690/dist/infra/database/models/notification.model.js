@@ -27,11 +27,6 @@ const notificationSchema = new Schema({
         enum: NotificationTargetTypeEnum,
         required: true,
     },
-    notificationTargetId: {
-        type: Types.ObjectId,
-        refPath: "notificationTargetType",
-        required: true,
-    },
     title: {
         type: String,
         required: true,
@@ -54,6 +49,7 @@ const notificationSchema = new Schema({
         default: new Date(),
     },
     createdByAdmin: { type: Types.ObjectId, ref: "User" },
+    notificationKey: { type: String },
     deletedAt: Date,
 }, {
     timestamps: true,
