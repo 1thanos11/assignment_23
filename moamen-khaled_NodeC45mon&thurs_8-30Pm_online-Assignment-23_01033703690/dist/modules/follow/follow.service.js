@@ -11,6 +11,7 @@ import { BlockRepository, FollowRepository, NotificationRepository, ProfileRepos
 import { realtimeGateWay } from "../realtime/realtime.gateway.js";
 import { CacheTTL } from "../../common/constants/cache.constants.js";
 import { ShowFollowEnum } from "../../common/enums/settings.enums.js";
+import { PaginateDefault } from "../../common/constants/paginate.constants.js";
 class FollowService {
     userRepository;
     profileRepository;
@@ -225,12 +226,13 @@ class FollowService {
     }
     async rejectFollowRequest(inputs) {
         const { user, targetUserId } = inputs;
-        const [profile, settings] = await Promise.all([
+        const [targetUser, profile, settings] = await Promise.all([
+            this.userRepository.findOne({ filter: { _id: targetUserId } }),
             this.profileRepository.findOne({ filter: { ownerId: user._id } }),
             this.settingsRepository.findOne({ filter: { ownerId: targetUserId } }),
         ]);
-        if (!profile) {
-            throw new NotFoundError(`Profile not found`);
+        if (!profile || !targetUser) {
+            throw new NotFoundError(`Profile not found or user not found`);
         }
         if (!settings) {
             throw new NotFoundError(`settings not found`);
@@ -291,12 +293,13 @@ class FollowService {
     }
     async acceptFollowRequest(inputs) {
         const { user, targetUserId } = inputs;
-        const [userProfile, targetSettings] = await Promise.all([
+        const [targetUser, userProfile, targetSettings] = await Promise.all([
+            this.userRepository.findOne({ filter: { _id: targetUserId } }),
             this.profileRepository.findOne({ filter: { ownerId: user._id } }),
             this.settingsRepository.findOne({ filter: { ownerId: targetUserId } }),
         ]);
-        if (!userProfile) {
-            throw new NotFoundError(`profile not found`);
+        if (!userProfile || targetUser) {
+            throw new NotFoundError(`profile not found or user not found`);
         }
         if (!targetSettings) {
             throw new NotFoundError(`Something went wrong may be target user not found`);
@@ -311,9 +314,12 @@ class FollowService {
                     followerId: targetUserId,
                     requested: true,
                 },
-                update: { followStatus: FollowStatusEnum.ACCEPTED },
+                update: { $set: { followStatus: FollowStatusEnum.ACCEPTED } },
                 options: { session },
             });
+            if (!follow) {
+                throw new NotFoundError(`Follow request not found`);
+            }
             await this.statsRepository.findOneAndUpdate({
                 filter: { ownerId: user._id },
                 update: { $inc: { followersCount: 1 } },
@@ -382,25 +388,42 @@ class FollowService {
             return;
         }
     }
-    followers = async ({ userId, page, limit, search, }) => {
+    getFollowers = async ({ userId, page = PaginateDefault.PAGE, limit = PaginateDefault.LIMIT, search, }) => {
         const pipeline = [
-            { $match: { followingId: userId } },
             {
+                $match: {
+                    followingId: userId,
+                    followStatus: FollowStatusEnum.ACCEPTED,
+                },
+            },
+        ];
+        if (search?.trim()) {
+            pipeline.push({
                 $lookup: {
                     from: "profiles",
                     localField: "followerId",
                     foreignField: "ownerId",
                     as: "follower",
                 },
-            },
-            { $unwind: "$follower" },
-        ];
-        if (search?.trim()) {
-            pipeline.push({
-                $match: { "follower.username": { $regex: search, $options: "i" } },
-            });
+            }, { $unwind: "$follower" }, {
+                $match: {
+                    "follower.username": {
+                        $regex: search,
+                        $options: "i",
+                    },
+                },
+            }, { $sort: { createdAt: -1 } }, { $skip: (page - 1) * limit }, { $limit: limit });
         }
-        pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
+        else {
+            pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit }, { $sort: { createdAt: -1 } }, {
+                $lookup: {
+                    from: "profiles",
+                    localField: "followerId",
+                    foreignField: "ownerId",
+                    as: "follower",
+                },
+            }, { $unwind: "$follower" });
+        }
         const version = await this.redis.getFollowersVersion(userId);
         const key = this.redis.followersKey({
             userId: userId,
@@ -425,7 +448,7 @@ class FollowService {
         const { user, targetUserId, page, limit, search } = inputs;
         const isOwner = user._id.equals(targetUserId);
         if (isOwner) {
-            const followers = await this.followers({
+            const followers = await this.getFollowers({
                 userId: targetUserId,
                 page: page,
                 limit: limit,
@@ -459,7 +482,7 @@ class FollowService {
         }
         if (isFollower) {
             if (targetSettings.privacy.showFollowersList !== ShowFollowEnum.ONLY_ME) {
-                const followers = await this.followers({
+                const followers = await this.getFollowers({
                     userId: targetUserId,
                     page: page,
                     limit: limit,
@@ -467,18 +490,136 @@ class FollowService {
                 });
                 return followers;
             }
+            throw new ForbiddenError(`You can't see the followers list of this user`);
         }
         if (targetProfile.visibility === ProfileVisibilityEnum.PRIVATE ||
             targetSettings.privacy.showFollowersList !== ShowFollowEnum.ANYONE) {
             throw new ForbiddenError(`You can't see the followers list of this user`);
         }
-        const followers = await this.followers({
+        const followers = await this.getFollowers({
             userId: targetUserId,
             page: page,
             limit: limit,
             search: search,
         });
         return followers;
+    }
+    getFollowingList = async ({ userId, page = PaginateDefault.PAGE, limit = PaginateDefault.LIMIT, search, }) => {
+        console.log({
+            page,
+            limit,
+            search,
+        });
+        const pipeline = [
+            {
+                $match: {
+                    followerId: userId,
+                    followStatus: FollowStatusEnum.ACCEPTED,
+                },
+            },
+        ];
+        if (search?.trim()) {
+            pipeline.push({
+                $lookup: {
+                    from: "profiles",
+                    localField: "followingId",
+                    foreignField: "ownerId",
+                    as: "following",
+                },
+            }, { $unwind: "$following" }, {
+                $match: { "following.username": { $regex: search, $options: "i" } },
+            }, { $sort: { createdAt: -1 } }, { $skip: (page - 1) * limit }, { $limit: limit });
+        }
+        else {
+            pipeline.push({ $sort: { createdAt: -1 } }, { $skip: (page - 1) * limit }, { $limit: limit }, {
+                $lookup: {
+                    from: "profiles",
+                    localField: "followingId",
+                    foreignField: "ownerId",
+                    as: "following",
+                },
+            }, { $unwind: "$following" });
+        }
+        const version = await this.redis.getFollowingsVersion(userId);
+        const key = this.redis.followingsKey({
+            userId,
+            page,
+            limit,
+            search,
+            version,
+        });
+        const followingList = await this.redis.cache({
+            key,
+            ttl: CacheTTL.FOLLOWINGS_LIST,
+            fn: () => this.followRepository.aggregate({
+                pipeline,
+            }),
+        });
+        if (!followingList?.length) {
+            return [];
+        }
+        return followingList;
+    };
+    async followingList(inputs) {
+        const { user, targetUserId, page, limit, search } = inputs;
+        const isOwner = user._id.equals(targetUserId);
+        if (isOwner) {
+            const followingList = await this.getFollowingList({
+                userId: targetUserId,
+                page: page,
+                limit: limit,
+                search: search,
+            });
+            return followingList;
+        }
+        const [targetUser, targetSettings, targetProfile, isFollower, isBlock] = await Promise.all([
+            this.userRepository.findOne({ filter: { _id: targetUserId } }),
+            this.settingsRepository.findOne({ filter: { ownerId: targetUserId } }),
+            this.profileRepository.findOne({ filter: { ownerId: targetUserId } }),
+            this.followRepository.findOne({
+                filter: { followerId: user._id, followingId: targetUserId },
+            }),
+            this.blockRepository.findOne({
+                filter: {
+                    $or: [
+                        { blockerId: user._id, blockedId: targetUserId },
+                        { blockerId: targetUserId, blockedId: user._id },
+                    ],
+                },
+            }),
+        ]);
+        if (isBlock) {
+            throw new NotFoundError(`User not found`);
+        }
+        if (!targetUser || !targetSettings || !targetProfile) {
+            throw new NotFoundError(`Something went wrong may be user not found`);
+        }
+        if (isFollower) {
+            if (targetSettings.privacy.showFollowingsList !== ShowFollowEnum.ONLY_ME) {
+                const followingList = await this.getFollowingList({
+                    userId: targetUserId,
+                    page: page,
+                    limit: limit,
+                    search: search,
+                });
+                return followingList;
+            }
+            throw new ForbiddenError(`You can't see the following list of this user`);
+        }
+        const isPrivate = targetProfile.visibility === ProfileVisibilityEnum.PRIVATE;
+        if (isPrivate) {
+            throw new ForbiddenError(`You can't see the following list of this user`);
+        }
+        if (targetSettings.privacy.showFollowingsList !== ShowFollowEnum.ANYONE) {
+            throw new ForbiddenError(`You can't see the following list of this user`);
+        }
+        const followingList = await this.getFollowingList({
+            userId: targetUserId,
+            page: page,
+            limit: limit,
+            search: search,
+        });
+        return followingList;
     }
 }
 export const followService = new FollowService();

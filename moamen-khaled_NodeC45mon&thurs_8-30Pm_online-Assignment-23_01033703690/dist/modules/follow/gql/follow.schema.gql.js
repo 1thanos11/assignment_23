@@ -44,8 +44,14 @@ class FollowGraphQLSchema {
             followersList: {
                 description: "accept follow request",
                 type: this.followGraphQLType.followersList,
-                args: this.followGraphQLArgs.followersList,
+                args: this.followGraphQLArgs.followList,
                 resolve: this.followResolver.followersList,
+            },
+            followingList: {
+                description: `following list of target user`,
+                type: this.followGraphQLType.followingList,
+                args: this.followGraphQLArgs.followList,
+                resolve: this.followResolver.followingList,
             },
         };
     }

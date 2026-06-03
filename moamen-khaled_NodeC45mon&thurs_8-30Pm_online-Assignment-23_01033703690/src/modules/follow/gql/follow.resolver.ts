@@ -2,9 +2,13 @@ import type { FollowStatusEnum } from "../../../common/enums/follow.enums.js";
 import type { IGQqlContext } from "../../../common/types/gql.js";
 import { GQLAuthentication } from "../../../middlewares/auth.middleware.js";
 import { GQLValidate } from "../../../middlewares/validation.middleware.js";
-import type { IFollowersListResponse } from "../follow.entity.js";
+import type {
+  IFollowersListResponse,
+  IFollowingListResponse,
+} from "../follow.entity.js";
 import type {
   GraphQLFollowersListDto,
+  GraphQLFollowingListDto,
   GraphQLFollowUserDto,
 } from "../follow.js";
 import { followService } from "../follow.service.js";
@@ -116,6 +120,28 @@ class FollowResolver {
     });
 
     return { message: "Success", data: followers };
+  };
+
+  //following list
+  followingList = async (
+    parent: any,
+    { targetUserId, page, limit, search }: GraphQLFollowingListDto,
+    context: IGQqlContext,
+  ): Promise<{ message: string; data: Array<IFollowingListResponse> }> => {
+    //authentication
+    const { user } = await GQLAuthentication({ context });
+    //validation
+    const validatedData = await GQLValidate<GraphQLFollowingListDto>({
+      schema: this.followValidation.followersList,
+      args: { targetUserId, page, limit, search },
+    });
+    //service
+    const followingList = await this.followService.followingList({
+      user,
+      ...validatedData,
+    });
+
+    return { message: "Success", data: followingList };
   };
 }
 

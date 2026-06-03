@@ -183,7 +183,7 @@ class GraphQLTypes {
     }),
   });
 
-  //follow user
+  //followers list
   oneFollowersListType = new GraphQLObjectType({
     name: "oneFollowersListType",
     fields: () => ({
@@ -191,6 +191,23 @@ class GraphQLTypes {
       follower: {
         type: new GraphQLObjectType({
           name: "followerType",
+          fields: {
+            username: { type: GraphQLString },
+            avatarUrl: { type: GraphQLString },
+          },
+        }),
+      },
+    }),
+  });
+
+  //following list
+  oneFollowingListType = new GraphQLObjectType({
+    name: "oneFollowingListType",
+    fields: () => ({
+      followingId: { type: GraphQLID },
+      following: {
+        type: new GraphQLObjectType({
+          name: "followingType",
           fields: {
             username: { type: GraphQLString },
             avatarUrl: { type: GraphQLString },

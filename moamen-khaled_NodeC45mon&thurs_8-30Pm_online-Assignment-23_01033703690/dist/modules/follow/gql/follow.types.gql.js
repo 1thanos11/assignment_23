@@ -28,5 +28,12 @@ class FollowGraphQLType {
             data: { type: new GraphQLList(this.graphQLType.oneFollowersListType) },
         },
     });
+    followingList = new GraphQLObjectType({
+        name: "followingListType",
+        fields: {
+            message: { type: this.graphQLType.messageType },
+            data: { type: new GraphQLList(this.graphQLType.oneFollowingListType) },
+        },
+    });
 }
 export const followGraphQLType = new FollowGraphQLType();

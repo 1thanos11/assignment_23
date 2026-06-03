@@ -16,14 +16,12 @@ class GraphQLCommentResolver {
     };
     commentsList = async (parent, { postId, page, limit }, context) => {
         await GQLAuthentication({ context });
-        await GQLValidate({
+        const validatedData = await GQLValidate({
             schema: this.commentValidation.commentsListOfPost,
             args: { postId, page, limit },
         });
         const comments = await this.commentService.commentsListOfPost({
-            postId,
-            page,
-            limit,
+            ...validatedData,
         });
         return { message: `Success`, data: comments };
     };

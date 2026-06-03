@@ -59,5 +59,17 @@ class FollowResolver {
         });
         return { message: "Success", data: followers };
     };
+    followingList = async (parent, { targetUserId, page, limit, search }, context) => {
+        const { user } = await GQLAuthentication({ context });
+        const validatedData = await GQLValidate({
+            schema: this.followValidation.followersList,
+            args: { targetUserId, page, limit, search },
+        });
+        const followingList = await this.followService.followingList({
+            user,
+            ...validatedData,
+        });
+        return { message: "Success", data: followingList };
+    };
 }
 export const followResolver = new FollowResolver();
