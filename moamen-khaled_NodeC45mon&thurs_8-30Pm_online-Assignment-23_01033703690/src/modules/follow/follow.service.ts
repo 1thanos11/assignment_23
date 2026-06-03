@@ -789,9 +789,7 @@ class FollowService {
 
   //TODO : follow requests list
 
-  //TODO : followers list of another user
 
-  //TODO : following list of another user
 }
 
 export const followService = new FollowService();
