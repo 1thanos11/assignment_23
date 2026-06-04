@@ -94,12 +94,6 @@ class RedisService {
   userProfileKey({ id, version }: CacheUserPayLoadType): string {
     return `${this.userBaseKey({ id, version })}::Profile`;
   }
-  userSettingsKey({ id, version }: CacheUserPayLoadType): string {
-    return `${this.userBaseKey({ id, version })}::Settings`;
-  }
-  userStatsKey({ id, version }: CacheUserPayLoadType): string {
-    return `${this.userBaseKey({ id, version })}::Stats`;
-  }
   wholeProfileKey({ id, version }: CacheUserPayLoadType): string {
     return `${this.userBaseKey({ id, version })}::Whole_Profile`;
   }
@@ -248,6 +242,24 @@ class RedisService {
     version: number;
   }): string {
     return `BlockList::User::${userId}::v${version}`;
+  }
+  settingsVersionKey(userId: Types.ObjectId | string): string {
+    return `Settings::User::${userId}::version`;
+  }
+  settingsKey({
+    userId,
+    version,
+  }: {
+    userId: Types.ObjectId | string;
+    version: number;
+  }): string {
+    return `Settings::User::${userId}::v${version}`;
+  }
+  userStatsVersionKey(userId: Types.ObjectId | string): string {
+    return `Stats::User::${userId}version`;
+  }
+  userStatsKey({ id, version }: CacheUserPayLoadType): string {
+    return `${this.userBaseKey({ id, version })}::Stats`;
   }
 
   //Core Operations
@@ -642,6 +654,38 @@ class RedisService {
     userId: Types.ObjectId | string,
   ): Promise<number> {
     const key = this.blockListVersionKey(userId);
+
+    return await this.incr(key);
+  }
+  async getSettingsVersion(userId: Types.ObjectId | string): Promise<number> {
+    const key = this.settingsVersionKey(userId);
+    const previous = await this.client.set(key, "1", {
+      condition: "NX",
+      GET: true,
+    });
+
+    return previous ? Number(previous) : 1;
+  }
+  async incrementSettingsVersion(
+    userId: Types.ObjectId | string,
+  ): Promise<number> {
+    const key = this.settingsVersionKey(userId);
+
+    return await this.incr(key);
+  }
+  async getStatsVersion(userId: Types.ObjectId | string): Promise<number> {
+    const key = this.userStatsVersionKey(userId);
+    const previous = await this.client.set(key, "1", {
+      condition: "NX",
+      GET: true,
+    });
+
+    return previous ? Number(previous) : 1;
+  }
+  async incrementStatsVersion(
+    userId: Types.ObjectId | string,
+  ): Promise<number> {
+    const key = this.userStatsVersionKey(userId);
 
     return await this.incr(key);
   }

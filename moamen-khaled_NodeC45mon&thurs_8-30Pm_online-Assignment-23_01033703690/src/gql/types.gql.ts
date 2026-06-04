@@ -14,7 +14,9 @@ import {
   GQLProfileVisibilityEnum,
   GQLRelationEnum,
   GraphQLChatTypeEnum,
+  GraphQLLanguageEnum,
   GraphQLMessageTypeEnum,
+  GraphQLShowFollowEnum,
 } from "../common/enums/gql.enums.js";
 
 class GraphQLTypes {
@@ -232,6 +234,39 @@ class GraphQLTypes {
         }),
       },
     }),
+  });
+
+  //privacy type
+  privacyType = new GraphQLObjectType({
+    name: "oneSettingsPrivacyType",
+    fields: () => ({
+      profileVisibility: { type: GQLProfileVisibilityEnum },
+      showOnLineStatus: { type: GraphQLBoolean },
+      showLastSeen: { type: GraphQLBoolean },
+      showEmail: { type: GraphQLBoolean },
+      showPhone: { type: GraphQLBoolean },
+      showLocation: { type: GraphQLBoolean },
+      showDOB: { type: GraphQLBoolean },
+      showJoinedAt: { type: GraphQLBoolean },
+      showEducation: { type: GraphQLBoolean },
+      showRelation: { type: GraphQLBoolean },
+      showFollowersList: { type: GraphQLShowFollowEnum },
+      showFollowingsList: { type: GraphQLShowFollowEnum },
+    }),
+  });
+  //one settings type
+  oneSettingsType = new GraphQLObjectType({
+    name: "oneSettingsType",
+    fields: {
+      _id: { type: new GraphQLNonNull(GraphQLID) },
+      ownerId: { type: new GraphQLNonNull(GraphQLID) },
+      privacy: { type: this.privacyType },
+      language: { type: GraphQLLanguageEnum },
+      showInSearch: { type: GraphQLBoolean },
+      showInRecommendations: { type: GraphQLBoolean },
+      allowNotifications: { type: GraphQLBoolean },
+      allowGroupAdding: { type: GraphQLBoolean },
+    },
   });
 }
 

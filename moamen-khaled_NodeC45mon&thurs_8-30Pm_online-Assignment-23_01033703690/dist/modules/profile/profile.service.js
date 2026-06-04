@@ -129,8 +129,8 @@ class ProfileService {
                 },
             }),
             this.redis.cache({
-                key: this.redis.userSettingsKey({
-                    id: targetUser._id,
+                key: this.redis.settingsKey({
+                    userId: targetUser._id,
                     version: settingsVersion,
                 }),
                 ttl: CacheTTL.SETTINGS,
@@ -188,6 +188,31 @@ class ProfileService {
         if (settings.privacy.showLastSeen)
             response.lastSeenAt = targetUser.lastSeenAt ?? undefined;
         return response;
+    }
+    async getStats(inputs) {
+        const { targetId } = inputs;
+        const targetUser = await this.userRepository.findOne({
+            filter: { _id: targetId },
+        });
+        if (!targetUser) {
+            throw new NotFoundError("User not found");
+        }
+        const version = await this.redis.getStatsVersion(targetId);
+        const key = this.redis.userStatsKey({
+            id: targetId,
+            version,
+        });
+        const stats = await this.redis.cache({
+            key,
+            ttl: CacheTTL.STATS,
+            fn: () => this.statsRepository.findOne({
+                filter: { ownerId: targetId },
+            }),
+        });
+        if (!stats) {
+            throw new NotFoundError("Stats not found");
+        }
+        return stats;
     }
 }
 export const profileService = new ProfileService();

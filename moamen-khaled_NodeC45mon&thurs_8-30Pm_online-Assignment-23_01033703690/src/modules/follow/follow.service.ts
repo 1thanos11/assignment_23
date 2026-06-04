@@ -176,6 +176,7 @@ class FollowService {
     await Promise.all([
       this.redis.incrementFollowingVersion(user._id),
       this.redis.incrementFollowersVersion(targetUserId),
+      this.redis.incrementStatsVersion(user._id),
     ]);
     if (settings.allowNotifications) {
       try {
@@ -274,8 +275,9 @@ class FollowService {
       .to(await this.redis.getSockets(user._id))
       .emit("unFollow_user", { actorId: user._id, targetUserId });
     await Promise.all([
-      this.redis.incrementFollowingVersion(user._id),
       this.redis.incrementFollowersVersion(targetUserId),
+      this.redis.incrementFollowingVersion(user._id),
+      this.redis.incrementStatsVersion(user._id),
     ]);
 
     return;
@@ -423,6 +425,8 @@ class FollowService {
     await Promise.all([
       this.redis.incrementFollowingVersion(targetUserId),
       this.redis.incrementFollowersVersion(user._id),
+      this.redis.incrementStatsVersion(user._id),
+      this.redis.incrementStatsVersion(targetUserId),
     ]);
     if (targetSettings.allowNotifications === true) {
       try {
