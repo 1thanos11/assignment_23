@@ -111,6 +111,12 @@ class RedisService {
     followRequestsKey({ userId, page = PaginateDefault.PAGE, limit = PaginateDefault.LIMIT, search = PaginateDefault.SEARCH, version, }) {
         return `Follow_Requests::User::${userId}::v${version}::${page}::${limit}::${search}`;
     }
+    blockListVersionKey(userId) {
+        return `BlockList::User::${userId}::version`;
+    }
+    blockListKey({ userId, version, }) {
+        return `BlockList::User::${userId}::v${version}`;
+    }
     async set({ key, value, options, }) {
         try {
             return await this.client.set(key, JSON.stringify(value), options);
@@ -171,8 +177,8 @@ class RedisService {
         try {
             return await this.client.incr(key);
         }
-        catch {
-            console.log("Fail in redis incr operation");
+        catch (error) {
+            console.log("Fail in redis incr operation", error);
             return 0;
         }
     }
@@ -367,7 +373,10 @@ class RedisService {
     }
     async getFollowersVersion(userId) {
         const key = this.followersVersionKey(userId);
-        const previous = this.client.set(key, "1", { condition: "NX", GET: true });
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
         return previous ? Number(previous) : 1;
     }
     async incrementFollowersVersion(userId) {
@@ -376,7 +385,10 @@ class RedisService {
     }
     async getFollowingsVersion(userId) {
         const key = this.followingsVersionKey(userId);
-        const previous = this.client.set(key, "1", { condition: "NX", GET: true });
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
         return previous ? Number(previous) : 1;
     }
     async incrementFollowingVersion(userId) {
@@ -393,6 +405,18 @@ class RedisService {
     }
     async incrementFollowRequestsVersion(userId) {
         const key = this.followRequestsVersionKey(userId);
+        return await this.incr(key);
+    }
+    async getBlockListVersion(userId) {
+        const key = this.blockListVersionKey(userId);
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
+        return previous ? Number(previous) : 1;
+    }
+    async incrementBlockListVersion(userId) {
+        const key = this.blockListVersionKey(userId);
         return await this.incr(key);
     }
     async getSockets(userId) {

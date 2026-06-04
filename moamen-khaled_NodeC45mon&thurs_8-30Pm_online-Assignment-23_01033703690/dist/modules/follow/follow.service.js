@@ -507,11 +507,6 @@ class FollowService {
         return followers;
     }
     getFollowingList = async ({ userId, page = PaginateDefault.PAGE, limit = PaginateDefault.LIMIT, search, }) => {
-        console.log({
-            page,
-            limit,
-            search,
-        });
         const pipeline = [
             {
                 $match: {

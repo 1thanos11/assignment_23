@@ -641,11 +641,6 @@ class FollowService {
     limit?: number;
     search?: string;
   }): Promise<Array<IFollowingListResponse>> => {
-    console.log({
-      page,
-      limit,
-      search,
-    });
     const pipeline: Array<PipelineStage> = [
       {
         $match: {

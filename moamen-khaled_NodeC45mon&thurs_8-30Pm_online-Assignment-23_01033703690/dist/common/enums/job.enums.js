@@ -9,4 +9,6 @@ export var JobEnum;
     JobEnum["UPLOAD_COMMENT_MEDIA"] = "Upload_Comment_Media";
     JobEnum["UPDATE_COMMENT_MEDIA"] = "Update_Comment_Media";
     JobEnum["CREATE_INVITATION_MESSAGES"] = "Create_Invitation_Messages";
+    JobEnum["BLOCK"] = "Block";
+    JobEnum["FOLLOW"] = "Follow";
 })(JobEnum || (JobEnum = {}));

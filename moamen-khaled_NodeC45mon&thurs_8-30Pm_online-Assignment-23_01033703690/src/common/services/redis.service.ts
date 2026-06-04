@@ -237,6 +237,18 @@ class RedisService {
   }): string {
     return `Follow_Requests::User::${userId}::v${version}::${page}::${limit}::${search}`;
   }
+  blockListVersionKey(userId: Types.ObjectId | string): string {
+    return `BlockList::User::${userId}::version`;
+  }
+  blockListKey({
+    userId,
+    version,
+  }: {
+    userId: Types.ObjectId | string;
+    version: number;
+  }): string {
+    return `BlockList::User::${userId}::v${version}`;
+  }
 
   //Core Operations
   async set({
@@ -297,8 +309,8 @@ class RedisService {
   async incr(key: string): Promise<number> {
     try {
       return await this.client.incr(key);
-    } catch {
-      console.log("Fail in redis incr operation");
+    } catch (error) {
+      console.log("Fail in redis incr operation", error);
       return 0;
     }
   }
@@ -569,7 +581,10 @@ class RedisService {
   }
   async getFollowersVersion(userId: Types.ObjectId | string): Promise<number> {
     const key = this.followersVersionKey(userId);
-    const previous = this.client.set(key, "1", { condition: "NX", GET: true });
+    const previous = await this.client.set(key, "1", {
+      condition: "NX",
+      GET: true,
+    });
 
     return previous ? Number(previous) : 1;
   }
@@ -582,7 +597,10 @@ class RedisService {
   }
   async getFollowingsVersion(userId: Types.ObjectId | string): Promise<number> {
     const key = this.followingsVersionKey(userId);
-    const previous = this.client.set(key, "1", { condition: "NX", GET: true });
+    const previous = await this.client.set(key, "1", {
+      condition: "NX",
+      GET: true,
+    });
 
     return previous ? Number(previous) : 1;
   }
@@ -611,9 +629,38 @@ class RedisService {
 
     return await this.incr(key);
   }
+  async getBlockListVersion(userId: Types.ObjectId | string): Promise<number> {
+    const key = this.blockListVersionKey(userId);
+    const previous = await this.client.set(key, "1", {
+      condition: "NX",
+      GET: true,
+    });
+
+    return previous ? Number(previous) : 1;
+  }
+  async incrementBlockListVersion(
+    userId: Types.ObjectId | string,
+  ): Promise<number> {
+    const key = this.blockListVersionKey(userId);
+
+    return await this.incr(key);
+  }
   async getSockets(userId: Types.ObjectId | string): Promise<Array<string>> {
     return await this.sMembers(this.socketKey(userId));
   }
+  // subscriber = async (): Promise<RedisClientType<{}, {}, {}, 2, {}>> => {
+  //   return this.client.duplicate();
+  // };
+
+  // async publish({
+  //   channel,
+  //   message,
+  // }: {
+  //   channel: string;
+  //   message: string;
+  // }): Promise<any> {
+  //   return await this.client.publish(channel, message);
+  // }
 }
 
 export const redisService = new RedisService();
