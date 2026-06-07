@@ -184,6 +184,30 @@ class ReportService {
         }
         return moderationCase;
     }
+    async reviewModerationCase(inputs) {
+        const { user, moderationCaseId } = inputs;
+        const moderationCase = await this.moderationCaseRepository.findOneAndUpdate({
+            filter: { _id: moderationCaseId, status: ReportStatusEnum.PENDING },
+            update: {
+                $push: { reviewedBy: user._id },
+                $set: {
+                    reviewedAt: new Date(),
+                    status: ReportStatusEnum.UNDER_REVIEW,
+                },
+            },
+        });
+        if (!moderationCase) {
+            throw new NotFoundError(`Moderation case not found`);
+        }
+        await this.redis.incrementModerationCaseVersion({});
+        await this.redis.incrementModerationCaseVersion({ moderationCaseId });
+        const socketIds = await this.redis.getSockets(user._id);
+        this.realtime.getIo.to(socketIds).emit("review_moderation_case", {
+            reviewerId: user._id,
+            moderationCaseId,
+        });
+        return moderationCase;
+    }
     async takeActionForModerationCase(inputs) {
         const { user, moderationCaseId, action, customAction, status } = inputs;
         const moderationCase = await this.moderationCaseRepository.findOneAndUpdate({

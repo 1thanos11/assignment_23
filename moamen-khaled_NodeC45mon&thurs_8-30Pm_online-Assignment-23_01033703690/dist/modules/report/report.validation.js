@@ -37,6 +37,9 @@ class ReportValidation {
     openModerationCase = z.strictObject({
         moderationCaseId: generalValidationFields.id,
     });
+    reviewModerationCase = z.strictObject({
+        moderationCaseId: generalValidationFields.id,
+    });
     takeActionForModerationCae = z
         .strictObject({
         moderationCaseId: generalValidationFields.id,

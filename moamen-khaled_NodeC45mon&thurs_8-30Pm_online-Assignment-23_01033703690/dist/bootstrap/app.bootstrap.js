@@ -16,12 +16,14 @@ import { postRouter } from "../modules/post/index.js";
 import { commentRouter } from "../modules/comment/index.js";
 import { realtimeGateWay } from "../modules/realtime/realtime.gateway.js";
 import { chatRouter } from "../modules/chat/index.js";
+import { convertUnderReviewModerationCasesToPending } from "../jobs/moderationCase.job.js";
 const s3WritableStream = promisify(pipeline);
 async function bootstrap() {
     await connectDB();
     await redisService.connect();
     const app = express();
     app.use(cors(), helmet(), globalLimiter, express.json({ limit: "10mb" }));
+    await convertUnderReviewModerationCasesToPending();
     app.use("/api/v1/post", postRouter);
     app.use("/api/v1/comment", commentRouter);
     app.use("/api/v1/chat", chatRouter);

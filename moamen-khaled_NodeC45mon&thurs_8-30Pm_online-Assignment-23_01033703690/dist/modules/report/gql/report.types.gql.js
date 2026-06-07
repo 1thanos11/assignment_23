@@ -20,6 +20,13 @@ class ReportGraphQLType {
             data: { type: this.graphType.oneModerationCaseType },
         },
     });
+    reviewModerationCaseType = new GraphQLObjectType({
+        name: "reviewModerationCaseType",
+        fields: {
+            message: { type: this.graphType.messageType },
+            data: { type: this.graphType.oneModerationCaseType },
+        },
+    });
     takeActionForModerationCase = new GraphQLObjectType({
         name: "takeActionForModerationCase",
         fields: {

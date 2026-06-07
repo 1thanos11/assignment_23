@@ -40,7 +40,23 @@ class ReportResolver {
             args: { moderationCaseId },
         });
         const moderationCase = await this.reportService.openModerationCase({
-            moderationCaseId,
+            ...validatedData,
+        });
+        return { message: "Success", data: moderationCase };
+    };
+    reviewModerationCase = async (parent, { moderationCaseId }, context) => {
+        const { user } = await GQLAuthentication({ context });
+        await GraphQLAuthorization({
+            user,
+            allowedRoles: endpoints.reportsAndModerationCases,
+        });
+        const validatedData = await GQLValidate({
+            schema: this.reportValidation.openModerationCase,
+            args: { moderationCaseId },
+        });
+        const moderationCase = await this.reportService.reviewModerationCase({
+            user,
+            ...validatedData,
         });
         return { message: "Success", data: moderationCase };
     };

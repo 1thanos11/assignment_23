@@ -35,6 +35,13 @@ const moderationCaseSchema = new Schema({
             return this.status !== ReportStatusEnum.PENDING;
         },
     },
+    reviewedAt: Date,
+    reviewedBy: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        },
+    ],
     reportsCount: { type: Number, default: 0 },
     lastReason: String,
 }, {
