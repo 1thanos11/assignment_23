@@ -9,6 +9,7 @@ import { chatGraphQLSchema } from "../modules/chat/gql/chat.schema.gql.js";
 import { followGraphQLSchema } from "../modules/follow/gql/follow.schema.gql.js";
 import { blockGraphQLSchema } from "../modules/block/gql/block.schema.gql.js";
 import { settingsGraphQLSchema } from "../modules/settings/index.js";
+import { reportGraphQLSchema } from "../modules/report/gql/report.schema.gql.js";
 const query = new GraphQLObjectType({
     name: "query",
     description: "graphQl Query",
@@ -22,6 +23,7 @@ const query = new GraphQLObjectType({
         ...followGraphQLSchema.registerQuery(),
         ...blockGraphQLSchema.registerQuery(),
         ...settingsGraphQLSchema.registerQuery(),
+        ...reportGraphQLSchema.registerQuery(),
     },
 });
 const mutation = new GraphQLObjectType({
@@ -30,10 +32,11 @@ const mutation = new GraphQLObjectType({
     fields: {
         ...authGraphQlSchema.registerMutation(),
         ...userGraphQLSchema.registerMutation(),
-        ...profileGraphQLSchema.registerMutation(),
+        ...reportGraphQLSchema.registerMutation(),
         ...followGraphQLSchema.registerMutation(),
-        ...blockGraphQLSchema.registerMutation(),
+        ...profileGraphQLSchema.registerMutation(),
         ...settingsGraphQLSchema.registerMutation(),
+        ...blockGraphQLSchema.registerMutation(),
     },
 });
 export const schema = new GraphQLSchema({ query, mutation });

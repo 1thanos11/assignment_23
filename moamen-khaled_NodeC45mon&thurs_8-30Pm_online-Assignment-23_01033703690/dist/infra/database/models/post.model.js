@@ -26,6 +26,7 @@ const postSchema = new Schema({
         enum: PostStatusEnum,
         default: PostStatusEnum.PROCESSING,
     },
+    reportsCount: { type: Number, default: 0 },
     deletedAt: Date,
 }, {
     timestamps: true,

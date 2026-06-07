@@ -31,6 +31,7 @@ const userSchema = new Schema({
     bannedAt: Date,
     banReason: { type: String, maxlength: 50 },
     banCancelledAt: Date,
+    reportsCount: { type: Number, default: 0 },
     deactivatedAt: Date,
     deactivatedReason: {
         type: String,

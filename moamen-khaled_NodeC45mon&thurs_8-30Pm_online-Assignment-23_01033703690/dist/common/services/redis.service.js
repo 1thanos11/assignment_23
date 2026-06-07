@@ -123,6 +123,24 @@ class RedisService {
     userStatsKey({ id, version }) {
         return `${this.userBaseKey({ id, version })}::Stats`;
     }
+    reportVersionKey(reportId) {
+        return `Report::${reportId}::version`;
+    }
+    reportKey({ reportId, version, }) {
+        return `Report::${reportId}::v${version}`;
+    }
+    reportList({ page, limit, search, version, }) {
+        return `Report::${page}::${limit}::${search}::v${version}`;
+    }
+    moderationCaseVersionKey(moderationCaseId) {
+        return `ModerationCase::${moderationCaseId}::version`;
+    }
+    moderationCaseKey({ moderationCaseId, version, }) {
+        return `ModerationCase::${moderationCaseId}::v${version}`;
+    }
+    moderationCaseList({ page, limit, search, version, }) {
+        return `ModerationCase::${page}::${limit}::${search}::v${version}`;
+    }
     async set({ key, value, options, }) {
         try {
             return await this.client.set(key, JSON.stringify(value), options);
@@ -447,6 +465,30 @@ class RedisService {
     }
     async incrementStatsVersion(userId) {
         const key = this.userStatsVersionKey(userId);
+        return await this.incr(key);
+    }
+    async getReportVersion({ reportId = "List", }) {
+        const key = this.reportVersionKey(reportId);
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
+        return previous ? Number(previous) : 1;
+    }
+    async incrementReportVersion({ reportId = "List", }) {
+        const key = this.reportVersionKey(reportId);
+        return await this.incr(key);
+    }
+    async getModerationCaseVersion({ moderationCaseId = "List", }) {
+        const key = this.moderationCaseVersionKey(moderationCaseId);
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
+        return previous ? Number(previous) : 1;
+    }
+    async incrementModerationCaseVersion({ moderationCaseId = "List", }) {
+        const key = this.moderationCaseVersionKey(moderationCaseId);
         return await this.incr(key);
     }
     async getSockets(userId) {

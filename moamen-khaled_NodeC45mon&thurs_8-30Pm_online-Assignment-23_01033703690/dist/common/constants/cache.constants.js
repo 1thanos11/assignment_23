@@ -12,5 +12,9 @@ export const CacheTTL = {
     FOLLOWINGS_LIST: 60 * 10 * 24 * 7,
     FOLLOW_REQUESTS_LIST: 60 * 10 * 24 * 7,
     BLOCK_LIST: 60 * 10,
+    REPORT: 60 * 10,
+    REPORT_LIST: 60 * 10,
+    MODERATION_CASE: 60 * 10,
+    MODERATION_CASE_LIST: 60 * 10,
 };
 export const MAX_COUNTS = { GROUP_PARTICIPANTS: 1000 };

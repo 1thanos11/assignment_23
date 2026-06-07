@@ -27,6 +27,11 @@ export const restFullApiAuthorization = (roles) => {
         next();
     };
 };
+export const GraphQLAuthorization = async ({ user, allowedRoles, }) => {
+    if (!allowedRoles.includes(user.role)) {
+        throw new ForbiddenError(`you are not authorized`);
+    }
+};
 export const GQLAuthentication = async ({ context, tokenType = TokenTypeEnum.ACCESS, }) => {
     const authorization = context.req.raw.headers.authorization;
     if (!authorization) {

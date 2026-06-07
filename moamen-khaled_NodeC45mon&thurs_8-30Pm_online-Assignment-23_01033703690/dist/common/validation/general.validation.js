@@ -3,7 +3,7 @@ import { ProviderEnum, RoleEnum, UserStatusEnum } from "../enums/user.enums.js";
 import { GenderEnum, LanguageEnum, ProfileVisibilityEnum, } from "../enums/profile.enums.js";
 import z from "zod";
 import { FollowStatusEnum } from "../enums/follow.enums.js";
-import { ReportPriorityEnum, ReportReasonEnum, ReportTargetTypeEnum, } from "../enums/report.enums.js";
+import { ReportActionEnum, ReportPriorityEnum, ReportReasonEnum, ReportStatusEnum, ReportTargetTypeEnum, } from "../enums/report.enums.js";
 import { getCountries } from "libphonenumber-js/max";
 import { NotificationTargetTypeEnum, NotificationTypeEnum, PushStatusEnum, } from "../enums/notification.enums.js";
 import { toObjectId } from "../objectId.js";
@@ -45,9 +45,11 @@ export const generalValidationFields = {
     pushStatus: z.enum(PushStatusEnum).default(PushStatusEnum.PENDING),
     reportTargetType: z.enum(ReportTargetTypeEnum),
     reason: z.enum(ReportReasonEnum),
+    priority: z.enum(ReportPriorityEnum),
+    reportAction: z.enum(ReportActionEnum),
+    reportStatus: z.enum(ReportStatusEnum),
     customReason: z.string(),
     description: z.string(),
-    priority: z.enum(ReportPriorityEnum),
     allowNotifications: z.boolean(),
     showInSearch: z.boolean(),
     showInRecommendations: z.boolean(),

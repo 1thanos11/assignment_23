@@ -30,7 +30,7 @@ class AuthValidationSchema {
     login = z.strictObject({
         email: generalValidationFields.email,
         password: generalValidationFields.password,
-        FCM: generalValidationFields.nullString,
+        FCM: generalValidationFields.nullString.optional(),
     });
     forgotPassword = z.strictObject({
         email: generalValidationFields.email,
