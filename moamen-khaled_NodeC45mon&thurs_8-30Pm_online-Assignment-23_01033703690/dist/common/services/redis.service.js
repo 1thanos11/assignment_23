@@ -57,11 +57,11 @@ class RedisService {
     userKey({ id, version }) {
         return `${this.userBaseKey({ id, version })}::Root`;
     }
-    userProfileKey({ id, version }) {
-        return `${this.userBaseKey({ id, version })}::Profile`;
+    profileVersionKey(userId) {
+        return `Profile::User::${userId}`;
     }
-    wholeProfileKey({ id, version }) {
-        return `${this.userBaseKey({ id, version })}::Whole_Profile`;
+    profileKey({ id, version }) {
+        return `${this.userBaseKey({ id, version })}::Profile`;
     }
     postVersionKey({ userId, postId = "List", }) {
         return `Post::User::${userId}::${postId}`;
@@ -140,6 +140,21 @@ class RedisService {
     }
     moderationCaseList({ page, limit, search, version, }) {
         return `ModerationCase::${page}::${limit}::${search}::v${version}`;
+    }
+    storyListVersionKey(userId) {
+        return `Story::User::${userId}::version`;
+    }
+    storyListKey({ userId, version, }) {
+        return `Story::User::${userId}::v${version}`;
+    }
+    storyKey(storyId) {
+        return `Story::${storyId}`;
+    }
+    bannedUsersListVersion() {
+        return `BannedUsers::Version`;
+    }
+    bannedUsersList({ page, limit, search, version, }) {
+        return `BannedUsers::${page}::${limit}::${search}::v${version}`;
     }
     async set({ key, value, options, }) {
         try {
@@ -359,6 +374,18 @@ class RedisService {
         const key = this.userVersionKey(id);
         return await this.incr(key);
     }
+    async getProfileVersion(userId) {
+        const key = this.profileVersionKey(userId);
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
+        return previous ? Number(previous) : 1;
+    }
+    async incrementProfileVersion(userId) {
+        const key = this.profileVersionKey(userId);
+        return await this.incr(key);
+    }
     async getPostVersion({ userId, postId = "List", }) {
         const key = this.postVersionKey({ userId, postId });
         const previous = await this.client.set(key, "1", {
@@ -489,6 +516,30 @@ class RedisService {
     }
     async incrementModerationCaseVersion({ moderationCaseId = "List", }) {
         const key = this.moderationCaseVersionKey(moderationCaseId);
+        return await this.incr(key);
+    }
+    async getStoryListVersion(userId) {
+        const key = this.storyListVersionKey(userId);
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
+        return previous ? Number(previous) : 1;
+    }
+    async incrementStoryListVersion(userId) {
+        const key = this.storyListVersionKey(userId);
+        return await this.incr(key);
+    }
+    async getBannedUsersListVersion() {
+        const key = this.bannedUsersListVersion();
+        const previous = await this.client.set(key, "1", {
+            condition: "NX",
+            GET: true,
+        });
+        return previous ? Number(previous) : 1;
+    }
+    async incrementBannedUsersListVersion() {
+        const key = this.bannedUsersListVersion();
         return await this.incr(key);
     }
     async getSockets(userId) {

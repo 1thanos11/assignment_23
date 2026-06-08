@@ -1,4 +1,4 @@
-import { model, Model, Schema } from "mongoose";
+import { model, Model, Schema, Types } from "mongoose";
 import { DeactivatedReasonEnum, ProviderEnum, RoleEnum, UserStatusEnum, } from "../../../common/enums/user.enums.js";
 import { BadRequestError } from "../../../common/errors/client.errors.js";
 import { modelHelper } from "./helperModel.js";
@@ -30,6 +30,7 @@ const userSchema = new Schema({
     lastSeenAt: Date,
     bannedAt: Date,
     banReason: { type: String, maxlength: 50 },
+    adminBanner: { type: Types.ObjectId, ref: "User" },
     banCancelledAt: Date,
     reportsCount: { type: Number, default: 0 },
     deactivatedAt: Date,
@@ -61,6 +62,12 @@ userSchema.virtual("comments", {
     localField: "_id",
     foreignField: "authorId",
     ref: "Comment",
+    justOne: true,
+});
+userSchema.virtual("posts", {
+    localField: "_id",
+    foreignField: "authorId",
+    ref: "Post",
     justOne: true,
 });
 userSchema.pre("validate", function () {

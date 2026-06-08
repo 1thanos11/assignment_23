@@ -35,9 +35,4 @@ const messageSchema = new Schema({
     toObject: { virtuals: true },
 });
 messageSchema.index({ chatId: 1, createdAt: -1 });
-messageSchema.virtual("sender", {
-    localField: "senderId",
-    foreignField: "_id",
-    ref: "User",
-});
 export const Message = model("Message", messageSchema);

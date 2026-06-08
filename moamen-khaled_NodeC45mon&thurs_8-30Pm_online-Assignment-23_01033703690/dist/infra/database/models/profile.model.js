@@ -36,10 +36,4 @@ const profileSchema = new Schema({
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
 });
-profileSchema.virtual("posts", {
-    localField: "ownerId",
-    foreignField: "authorId",
-    ref: "Post",
-    justOne: true,
-});
 export const Profile = model("Profile", profileSchema);
