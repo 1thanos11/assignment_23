@@ -36,5 +36,15 @@ class AdminResolver {
         const users = await this.adminService.bannedUsersList({ ...validatedData });
         return { message: "Success", data: users };
     };
+    adminDeleteUser = async (parent, { targetUserId }, context) => {
+        const { user } = await GQLAuthentication({ context });
+        await GraphQLAuthorization({ user, allowedRoles: endPoints.adminDeleteUser });
+        const validatedData = await GQLValidate({
+            schema: this.adminValidation.adminDeleteUser,
+            args: { targetUserId },
+        });
+        await this.adminService.adminDeleteUser({ ...validatedData });
+        return { message: "Success" };
+    };
 }
 export const adminResolver = new AdminResolver();

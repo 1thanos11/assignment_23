@@ -29,5 +29,11 @@ class AdminGraphQLType {
             },
         },
     });
+    adminDeleteUser = new GraphQLObjectType({
+        name: "adminDeleteUserType",
+        fields: {
+            message: { type: this.graphQLType.messageType },
+        },
+    });
 }
 export const adminGraphQLType = new AdminGraphQLType();

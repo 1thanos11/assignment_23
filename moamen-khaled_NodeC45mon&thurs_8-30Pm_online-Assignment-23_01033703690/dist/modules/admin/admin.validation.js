@@ -8,5 +8,8 @@ class AdminValidation {
     });
     unBan = z.strictObject({ targetUserId: generalValidationFields.id });
     bannedUsersList = z.strictObject({}).extend(PaginateValidation.shape);
+    adminDeleteUser = z.strictObject({
+        targetUserId: generalValidationFields.id,
+    });
 }
 export const adminValidation = new AdminValidation();

@@ -8,5 +8,6 @@ class AdminGraphQLArgs {
     bannedUsersList = {
         page: { type: GraphQLInt, limit: GraphQLInt, search: GraphQLString },
     };
+    adminDeleteUser = { targetUserId: { type: new GraphQLNonNull(GraphQLID) } };
 }
 export const adminGraphQLArgs = new AdminGraphQLArgs();

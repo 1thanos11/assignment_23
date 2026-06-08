@@ -29,6 +29,12 @@ class AdminGraphQLSchema {
                 args: this.adminArgs.unBan,
                 resolve: this.adminResolver.unBan,
             },
+            adminDeleteUser: {
+                description: "admin delete user",
+                type: this.adminType.adminDeleteUser,
+                args: this.adminArgs.adminDeleteUser,
+                resolve: this.adminResolver.adminDeleteUser,
+            },
         };
     }
 }
